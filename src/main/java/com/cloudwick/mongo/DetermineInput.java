@@ -4,7 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -20,10 +20,10 @@ import java.util.List;
 
 public class DetermineInput extends Configured implements Tool {
 
-  public static class InputMapper extends Mapper<Object, Text, Text, Text> {
+  public static class InputMapper extends Mapper<LongWritable, Text, Text, Text> {
     // for each input line of input file
     @Override
-    public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
       String[] tokens = value.toString().split("\\t");
       String mid;
       String day;
