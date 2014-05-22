@@ -40,6 +40,8 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
   private static final String DAY_FIELD_NAME = "rd";
   private static final String INTERVAL_READ_FIELD_PREFIX = "ir";
   private static final String REGISTER_READ_FIELD_PREFIX = "rr";
+  private static final String MONGO_USER = "administrator";
+  private static final String MONGO_PASSWORD = "password";
 
   enum BULKLOAD {
     NUM_MONGO_DOCS,
@@ -74,6 +76,8 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     Configuration conf = getConf();
 
     conf.set("bulkload.mongo.servers", args[2]);
+    conf.set("bulkload.mongo.user", MONGO_USER);
+    conf.set("bulkload.mongo.password", MONGO_PASSWORD);
     conf.set("bulkload.mongo.db", MONGO_DB);
     conf.set("bulkload.mongo.collection", MONGO_COLLECTION);
     conf.set("bulkload.mongo.dataset.type", args[1]);

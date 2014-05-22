@@ -39,17 +39,21 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
     String[] servers = c.getStrings("bulkload.mongo.servers");
     String databaseName = c.get("bulkload.mongo.db");
     String collectionName = c.get("bulkload.mongo.collection");
+    String username = c.get("bulkload.mongo.user");
+    String password = c.get("bulkload.mongo.password");
     dataSetFormat = c.get("bulkload.mongo.dataset.type");
     amiDvcFieldName = c.get("bulkload.mongo.field.ami_dvc");
     dayFieldName = c.get("bulkload.mongo.field.day");
     intervalFieldPrefix = c.get("bulkload.mongo.field.interval");
     registerFieldPrefix = c.get("bulkload.mongo.field.register");
 
+    List<MongoCredential> creds = new ArrayList<MongoCredential>();
+    creds.add(MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray()));
     List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
     for (String server : servers) {
       serverAddresses.add(new ServerAddress(server));
     }
-    mongoClient = new MongoClient(serverAddresses);
+    mongoClient = new MongoClient(serverAddresses, creds);
     DB db = mongoClient.getDB(databaseName);
     db.setWriteConcern(WriteConcern.ACKNOWLEDGED);
     collection = db.getCollection(collectionName);
