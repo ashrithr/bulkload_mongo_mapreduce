@@ -84,7 +84,7 @@ public class DetermineInput extends Configured implements Tool {
 //          vValues.add(readingVal);
 //        }
 //      }
-      System.out.println(meterDayKey.toString() + " -> " + Arrays.asList(meterValues));
+      System.out.println(meterDayKey.toString() + " -> " + Arrays.asList(meterValues.toString()));
 //      String meterID = meterDayKey.toString().split("#")[0];
 //      String readingDate = meterDayKey.toString().split("#")[1];
 //      System.out.println(String.format("mid: %s; day: %s; rr_kwh: %s, rr_kwd: %s, rr_kvar: %s, rr_kvrms: %s, rr_v: %s",
