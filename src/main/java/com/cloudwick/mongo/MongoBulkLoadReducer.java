@@ -31,6 +31,20 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   private BulkWriteResult result;
   private WriteConcern writeConcern;
 
+  // interval values
+  private BasicDBList irKwhValues = new BasicDBList();
+  private BasicDBList irKwdValues = new BasicDBList();
+  private BasicDBList irKvarValues = new BasicDBList();
+  private BasicDBList irKvrmsValues = new BasicDBList();
+  private BasicDBList irVValues = new BasicDBList();
+  // register values
+  private BasicDBList rrKwhValues = new BasicDBList();
+  private BasicDBList rrKwdValues = new BasicDBList();
+  private BasicDBList rrKvarValues = new BasicDBList();
+  private BasicDBList rrKvrmsValues = new BasicDBList();
+  private BasicDBList rrVValues = new BasicDBList();
+
+
   private static WriteResult update(DBCollection collection, BasicDBObject criteria, BasicDBObject insertDoc) {
     // db.collection.update(criteria, objNew, upsert, multi)
     return collection.update(criteria, insertDoc, true, false);
@@ -67,25 +81,14 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
 
   @Override
   protected void reduce(Text meterDayKey, Iterable<Text> meterValues, Context context) {
-    BasicDBObject document = null;
-    // interval values
-    BasicDBList irKwhValues = new BasicDBList();
-    BasicDBList irKwdValues = new BasicDBList();
-    BasicDBList irKvarValues = new BasicDBList();
-    BasicDBList irKvrmsValues = new BasicDBList();
-    BasicDBList irVValues = new BasicDBList();
-    // register values
-    BasicDBList rrKwhValues = new BasicDBList();
-    BasicDBList rrKwdValues = new BasicDBList();
-    BasicDBList rrKvarValues = new BasicDBList();
-    BasicDBList rrKvrmsValues = new BasicDBList();
-    BasicDBList rrVValues = new BasicDBList();
+    BasicDBObject document;
 
     for(Text meterValue: meterValues) {
       String readingType = meterValue.toString().split("#")[0];
       String readingVal  = meterValue.toString().split("#")[1];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
+          System.out.println(readingVal);
           rrKwhValues.add(readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
           rrKwdValues.add(readingVal);
@@ -118,45 +121,38 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
 
       document = new BasicDBObject(amiDvcFieldName, meterId)
                     .append(dayFieldName, recordedDay);
-
-      if (!irKwhValues.isEmpty()) {
-        document.put(intervalFieldPrefix + "_kwh", irKwhValues);
-      }
-
-      if (!irKwdValues.isEmpty()) {
-        document.put(intervalFieldPrefix + "_kwd", irKwdValues);
-      }
-
-      if (!irKvarValues.isEmpty()) {
-        document.put(intervalFieldPrefix + "_kvar", irKvarValues);
-      }
-
-      if (!irKvrmsValues.isEmpty()) {
-        document.put(intervalFieldPrefix + "_kvrms", irKvrmsValues);
-      }
-
-      if (!irVValues.isEmpty()) {
-        document.put(intervalFieldPrefix + "_v", irVValues);
-      }
-
-      if (!rrKwhValues.isEmpty()) {
-        document.put(registerFieldPrefix + "_kwh", rrKwhValues);
-      }
-
-      if (!rrKwdValues.isEmpty()) {
-        document.put(registerFieldPrefix + "_kwd", rrKwdValues);
-      }
-
-      if (!rrKvarValues.isEmpty()) {
-        document.put(registerFieldPrefix + "_kvar", rrKvarValues);
-      }
-
-      if (!rrKvrmsValues.isEmpty()) {
-        document.put(registerFieldPrefix + "_kvrms", rrKvrmsValues);
-      }
-
-      if (!rrVValues.isEmpty()) {
-        document.put(registerFieldPrefix + "_v", rrVValues);
+      if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
+        if (!rrKwhValues.isEmpty()) {
+          document.put(registerFieldPrefix + "_kwh", rrKwhValues);
+        }
+        if (!rrKwdValues.isEmpty()) {
+          document.put(registerFieldPrefix + "_kwd", rrKwdValues);
+        }
+        if (!rrKvarValues.isEmpty()) {
+          document.put(registerFieldPrefix + "_kvar", rrKvarValues);
+        }
+        if (!rrKvrmsValues.isEmpty()) {
+          document.put(registerFieldPrefix + "_kvrms", rrKvrmsValues);
+        }
+        if (!rrVValues.isEmpty()) {
+          document.put(registerFieldPrefix + "_v", rrVValues);
+        }
+      } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
+        if (!irKwhValues.isEmpty()) {
+          document.put(intervalFieldPrefix + "_kwh", irKwhValues);
+        }
+        if (!irKwdValues.isEmpty()) {
+          document.put(intervalFieldPrefix + "_kwd", irKwdValues);
+        }
+        if (!irKvarValues.isEmpty()) {
+          document.put(intervalFieldPrefix + "_kvar", irKvarValues);
+        }
+        if (!irKvrmsValues.isEmpty()) {
+          document.put(intervalFieldPrefix + "_kvrms", irKvrmsValues);
+        }
+        if (!irVValues.isEmpty()) {
+          document.put(intervalFieldPrefix + "_v", irVValues);
+        }
       }
 
       builder.insert(document);
