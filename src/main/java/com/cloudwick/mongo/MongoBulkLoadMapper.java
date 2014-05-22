@@ -58,7 +58,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
     db.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
     collection = db.getCollection(collectionName);
     // check if this improves the performance or not
-    collection.createIndex(new BasicDBObject(amiDvcFieldName, 1).append(dayFieldName, 1));
+    // collection.createIndex(new BasicDBObject(amiDvcFieldName, 1).append(dayFieldName, 1));
   }
 
   @Override
@@ -105,7 +105,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
             update(collection,
                 new BasicDBObject(amiDvcFieldName, mid).append(dayFieldName, day),
                 new BasicDBObject("$push", new BasicDBObject(reading_type, mrdg)));
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_DOCS).increment(1);
+            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_UPDATE_OPS).increment(1);
           } catch (Exception e) {
             logger.debug(e);
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);
@@ -120,7 +120,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
           mid = parts[0];
           String readDate = parts[1];
           String date[] = readDate.split("\\s+");
-          day = date[1];
+          day = date[0];
           uom = parts[6];
           mrdg = parts[9];
 
@@ -151,7 +151,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
             update(collection,
                 new BasicDBObject(amiDvcFieldName, mid).append(dayFieldName, day),
                 new BasicDBObject("$push", new BasicDBObject(reading_type, mrdg)));
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_DOCS).increment(1);
+            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_UPDATE_OPS).increment(1);
           } catch (Exception e) {
             logger.debug(e);
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);

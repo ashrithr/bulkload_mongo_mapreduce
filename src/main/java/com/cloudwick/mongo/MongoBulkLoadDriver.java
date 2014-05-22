@@ -44,7 +44,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
   private static final String MONGO_PASSWORD = "password";
 
   enum BULKLOAD {
-    NUM_MONGO_DOCS,
+    NUM_MONGO_UPDATE_OPS,
     NUM_ERRORS,
     NUM_RECORDS,
     MALFORMED_RECORDS_INTERVAL,
