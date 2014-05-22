@@ -113,6 +113,7 @@ public class DetermineInput extends Configured implements Tool {
     job.setReducerClass(OutputReducer.class);
     job.setOutputKeyClass(NullWritable.class);
     job.setOutputValueClass(NullWritable.class);
+    job.setOutputFormatClass(NullOutputFormat.class);
     job.setNumReduceTasks(1);
     int ret = job.waitForCompletion(true) ? 0 : 1;
 
