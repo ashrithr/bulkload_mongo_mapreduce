@@ -32,17 +32,17 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   private WriteConcern writeConcern;
 
   // interval values
-  private BasicDBList irKwhValues = new BasicDBList();
-  private BasicDBList irKwdValues = new BasicDBList();
-  private BasicDBList irKvarValues = new BasicDBList();
-  private BasicDBList irKvrmsValues = new BasicDBList();
-  private BasicDBList irVValues = new BasicDBList();
+  private List<String> irKwhValues = new ArrayList<String>();
+  private List<String> irKwdValues = new ArrayList<String>();
+  private List<String> irKvarValues = new ArrayList<String>();
+  private List<String> irKvrmsValues = new ArrayList<String>();
+  private List<String> irVValues = new ArrayList<String>();
   // register values
-  private BasicDBList rrKwhValues = new BasicDBList();
-  private BasicDBList rrKwdValues = new BasicDBList();
-  private BasicDBList rrKvarValues = new BasicDBList();
-  private BasicDBList rrKvrmsValues = new BasicDBList();
-  private BasicDBList rrVValues = new BasicDBList();
+  private List<String> rrKwhValues = new ArrayList<String>();
+  private List<String> rrKwdValues = new ArrayList<String>();
+  private List<String> rrKvarValues = new ArrayList<String>();
+  private List<String> rrKvrmsValues = new ArrayList<String>();
+  private List<String> rrVValues = new ArrayList<String>();
 
 
   private static WriteResult update(DBCollection collection, BasicDBObject criteria, BasicDBObject insertDoc) {
@@ -88,7 +88,6 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       String readingVal  = meterValue.toString().split("#")[1];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
-          System.out.println(readingVal);
           rrKwhValues.add(readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
           rrKwdValues.add(readingVal);
