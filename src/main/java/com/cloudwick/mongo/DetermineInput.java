@@ -41,21 +41,7 @@ public class DetermineInput extends Configured implements Tool {
         uom = tokens[6];
         mrdg = tokens[10];
 
-        if (uom.matches("(?i:.*kwh.*)")) {
-          readingType = registerFieldPrefix + "_kwh";
-        } else if (uom.matches("(?i:.*kwd.*)")) {
-          readingType = registerFieldPrefix + "_kwd";
-        } else if (uom.matches("(?i:.*kvar.*)")) {
-          readingType = registerFieldPrefix + "_kvar";
-        } else if (uom.matches("(?i:.*kvrms.*)") || uom.matches("(?i:.*vrms.*)")) {
-          readingType = registerFieldPrefix + "_kvrms";
-        } else if (uom.matches("(?i:.*v.*)")) {
-          readingType = registerFieldPrefix + "_v";
-        } else {
-          readingType = registerFieldPrefix + "_u";
-        }
-
-        context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s", readingType, mrdg)));
+        context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s", uom, mrdg)));
       }
     }
   }
