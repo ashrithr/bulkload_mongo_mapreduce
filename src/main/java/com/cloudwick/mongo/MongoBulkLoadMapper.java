@@ -55,8 +55,10 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
     }
     mongoClient = new MongoClient(serverAddresses, creds);
     DB db = mongoClient.getDB(databaseName);
-    db.setWriteConcern(WriteConcern.ACKNOWLEDGED);
+    db.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
     collection = db.getCollection(collectionName);
+    // check if this improves the performance or not
+    collection.createIndex(new BasicDBObject(amiDvcFieldName, 1).append(dayFieldName, 1));
   }
 
   @Override
@@ -97,7 +99,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
             reading_type = registerFieldPrefix + "_u";
           }
 
-          System.out.println(String.format("ami_dvc_name:%s;day:%s;%s:%s", mid, day, reading_type, mrdg));
+          // System.out.println(String.format("ami_dvc_name:%s;day:%s;%s:%s", mid, day, reading_type, mrdg));
 
           try {
             update(collection,
@@ -113,7 +115,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (parts.length > 14) {
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_INTERVAL);
-          System.err.println("Malformed record found: " + line);
+          System.err.println("Malformed INTERVAL found: " + line);
         } else {
           mid = parts[0];
           String readDate = parts[1];
