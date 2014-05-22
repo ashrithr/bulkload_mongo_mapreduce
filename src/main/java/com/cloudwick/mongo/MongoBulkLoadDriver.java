@@ -40,7 +40,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
   private static final String DAY_FIELD_NAME = "rd";
   private static final String INTERVAL_READ_FIELD_PREFIX = "ir";
   private static final String REGISTER_READ_FIELD_PREFIX = "rr";
-  private static final String MONGO_USER = "administrator";
+  private static final String MONGO_USER = "bulkDBAdmin";
   private static final String MONGO_PASSWORD = "password";
 
   enum BULKLOAD {
