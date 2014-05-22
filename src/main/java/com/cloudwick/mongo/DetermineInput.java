@@ -61,40 +61,40 @@ public class DetermineInput extends Configured implements Tool {
   }
 
   public static class OutputReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
-    private List<String> kwhValues = new ArrayList<String>();
-    private List<String> kwdValues = new ArrayList<String>();
-    private List<String> kvarValues = new ArrayList<String>();
-    private List<String> kvrmsValues = new ArrayList<String>();
-    private List<String> vValues = new ArrayList<String>();
+//    private List<String> kwhValues = new ArrayList<String>();
+//    private List<String> kwdValues = new ArrayList<String>();
+//    private List<String> kvarValues = new ArrayList<String>();
+//    private List<String> kvrmsValues = new ArrayList<String>();
+//    private List<String> vValues = new ArrayList<String>();
 
     @Override
     public void reduce(Text meterDayKey, Iterable<Text> meterValues, Context context) {
-      for (Text meterValue: meterValues) {
-        String readingType = meterValue.toString().split("#")[0];
-        String readingVal  = meterValue.toString().split("#")[1];
-        if (readingType.matches("(?i:.*kwh.*)")) {
-          kwhValues.add(readingVal);
-        } else if (readingType.matches("(?i:.*kwd.*)")) {
-          kwdValues.add(readingVal);
-        } else if (readingType.matches("(?i:.*kvar.*)")) {
-          kvarValues.add(readingVal);
-        } else if (readingType.matches("(?i:.*kvrms.*)")) {
-          kvrmsValues.add(readingVal);
-        } else if (readingType.matches("(?i:.*v.*)")) {
-          vValues.add(readingVal);
-        }
-      }
-
-      String meterID = meterDayKey.toString().split("#")[0];
-      String readingDate = meterDayKey.toString().split("#")[1];
-      System.out.println(String.format("mid: %s; day: %s; rr_kwh: %s, rr_kwd: %s, rr_kvar: %s, rr_kvrms: %s, rr_v: %s",
-          meterID, readingDate, Arrays.asList(kwhValues), Arrays.asList(kwdValues), Arrays.asList(kvarValues),
-          Arrays.asList(kvrmsValues), Arrays.asList(vValues)));
-      kwdValues.clear();
-      kwdValues.clear();
-      kvarValues.clear();
-      kvrmsValues.clear();
-      vValues.clear();
+//      for (Text meterValue: meterValues) {
+//        String readingType = meterValue.toString().split("#")[0];
+//        String readingVal  = meterValue.toString().split("#")[1];
+//        if (readingType.matches("(?i:.*kwh.*)")) {
+//          kwhValues.add(readingVal);
+//        } else if (readingType.matches("(?i:.*kwd.*)")) {
+//          kwdValues.add(readingVal);
+//        } else if (readingType.matches("(?i:.*kvar.*)")) {
+//          kvarValues.add(readingVal);
+//        } else if (readingType.matches("(?i:.*kvrms.*)")) {
+//          kvrmsValues.add(readingVal);
+//        } else if (readingType.matches("(?i:.*v.*)")) {
+//          vValues.add(readingVal);
+//        }
+//      }
+      System.out.println(meterDayKey.toString() + " -> " + Arrays.asList(meterValues));
+//      String meterID = meterDayKey.toString().split("#")[0];
+//      String readingDate = meterDayKey.toString().split("#")[1];
+//      System.out.println(String.format("mid: %s; day: %s; rr_kwh: %s, rr_kwd: %s, rr_kvar: %s, rr_kvrms: %s, rr_v: %s",
+//          meterID, readingDate, Arrays.asList(kwhValues), Arrays.asList(kwdValues), Arrays.asList(kvarValues),
+//          Arrays.asList(kvrmsValues), Arrays.asList(vValues)));
+//      kwdValues.clear();
+//      kwdValues.clear();
+//      kvarValues.clear();
+//      kvrmsValues.clear();
+//      vValues.clear();
     }
   }
 
