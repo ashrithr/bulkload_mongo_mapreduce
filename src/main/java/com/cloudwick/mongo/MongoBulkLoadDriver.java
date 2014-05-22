@@ -3,6 +3,8 @@ package com.cloudwick.mongo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
@@ -42,9 +44,10 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
   private static final String REGISTER_READ_FIELD_PREFIX = "rr";
   private static final String MONGO_USER = "bulkDBAdmin";
   private static final String MONGO_PASSWORD = "password";
+  private static final String MONGO_WRITE_CONCERN = "ACKNOWLEDGED";
 
   enum BULKLOAD {
-    NUM_MONGO_UPDATE_OPS,
+    NUM_MONGO_INSERT_OPS,
     NUM_ERRORS,
     NUM_RECORDS,
     MALFORMED_RECORDS_INTERVAL,
@@ -85,16 +88,21 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     conf.set("bulkload.mongo.field.day", DAY_FIELD_NAME);
     conf.set("bulkload.mongo.field.interval", INTERVAL_READ_FIELD_PREFIX);
     conf.set("bulkload.mongo.field.register", REGISTER_READ_FIELD_PREFIX);
+    conf.set("bulkload.mongo.write.concern", MONGO_WRITE_CONCERN);
 
     Job job = Job.getInstance(conf);
     job.setJobName("bulk load mongo " + MONGO_COLLECTION);
     job.setJarByClass(MongoBulkLoadDriver.class);
     FileInputFormat.addInputPath(job, inputDir);
     job.setMapperClass(MongoBulkLoadMapper.class);
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(Text.class);
+    job.setReducerClass(MongoBulkLoadReducer.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(NullWritable.class);
     job.setOutputFormatClass(NullOutputFormat.class);
 
-    // reducer NONE
-    job.setNumReduceTasks(0);
+    job.setNumReduceTasks(1);
 
     Date startTime = new Date();
     System.out.println("Job Started: " + startTime);
