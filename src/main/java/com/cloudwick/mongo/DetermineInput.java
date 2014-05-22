@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -59,7 +60,7 @@ public class DetermineInput extends Configured implements Tool {
     }
   }
 
-  public static class OutputReducer extends Reducer<Text, Text, Text, IntWritable> {
+  public static class OutputReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
     private List<String> kwhValues = new ArrayList<String>();
     private List<String> kwdValues = new ArrayList<String>();
     private List<String> kvarValues = new ArrayList<String>();
@@ -107,8 +108,11 @@ public class DetermineInput extends Configured implements Tool {
     job.setJarByClass(DetermineInput.class);
     FileInputFormat.addInputPath(job, inputDir);
     job.setMapperClass(InputMapper.class);
-    job.setOutputFormatClass(NullOutputFormat.class);
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(Text.class);
     job.setReducerClass(OutputReducer.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(NullWritable.class);
     job.setNumReduceTasks(1);
     int ret = job.waitForCompletion(true) ? 0 : 1;
 
