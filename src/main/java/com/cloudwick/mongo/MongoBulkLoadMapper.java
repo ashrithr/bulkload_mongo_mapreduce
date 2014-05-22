@@ -59,7 +59,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
   protected void map(LongWritable key, Text value, Context context) {
     String line = value.toString();
     if (line != null && !line.isEmpty()) {
-      String[] parts = line.split("\\s+");
+      String[] parts = line.split("\\t");
 
       String mid;
       String day;
@@ -73,9 +73,11 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
           System.err.println("Malformed REGISTER record: " + line);
         } else {
           mid = parts[0];
-          day = parts[1];
-          uom = parts[7];
-          mrdg = parts[11];
+          String readDate = parts[1];
+          String date[] = readDate.split("\\s+");
+          day = date[0];
+          uom = parts[6];
+          mrdg = parts[10];
 
           if (uom.matches("(?i:.*kwh.*)")) {
             reading_type = registerFieldPrefix + "_kwh";
@@ -105,21 +107,26 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, IntWri
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
-        if (parts.length > 16) {
+        if (parts.length > 14) {
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_INTERVAL);
           System.err.println("Malformed record found: " + line);
         } else {
           mid = parts[0];
-          day = parts[1];
-          uom = parts[8];
+          String readDate = parts[1];
+          String date[] = readDate.split("\\s+");
+          day = date[1];
+          uom = parts[6];
+          mrdg = parts[9];
+
           /*
             dataset from 2013-12-31 contains 'Voltage Sag' & 'Voltage swells' instead of voltage
-           */
+
           if (uom.matches("(?i:.*voltage*)")) {
             mrdg = parts[12];
           } else {
             mrdg = parts[11];
           }
+          */
 
           if (uom.matches("(?i:.*kwh.*)")) {
             reading_type = intervalFieldPrefix + "_kwh";
