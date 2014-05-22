@@ -33,7 +33,7 @@ import java.util.Date;
  * @author ashrith
  */
 public class MongoBulkLoadDriver  extends Configured implements Tool {
-  private static final String MONGO_SERVER = "localhost:27017";
+  // private static final String MONGO_SERVER = "localhost:27017";
   private static final String MONGO_DB = "bulk";
   private static final String MONGO_COLLECTION = "ami";
   private static final String AMI_DVC_FIELD_NAME = "mid";
@@ -50,10 +50,12 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
   }
 
   public int run(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.out.println("Usage: MongoBulkLoadDriver <in-dir> <dataset_format>");
-      System.out.println("  where: <in-dir> is the input path to process the data files");
-      System.out.println("         <dataset_format> is the data set type valid values: REGISTER | INTERVAL");
+    if (args.length != 3) {
+      System.err.println("Usage: MongoBulkLoadDriver <in-dir> <dataset_format> <mongo_servers>");
+      System.err.println("  where: <in-dir> is the input path to process the data files");
+      System.err.println("         <dataset_format> is the data set type valid values: REGISTER | INTERVAL");
+      System.err.println("         <mongo_servers> is a list of mongodb servers to connect to");
+      System.err.println("            Format: 'localhost:27017' or 'localhost:27017,localhost:27018'");
       ToolRunner.printGenericCommandUsage(System.out);
       return 2;
     }
@@ -71,7 +73,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     Path inputDir = new Path(args[0]);
     Configuration conf = getConf();
 
-    conf.set("bulkload.mongo.servers", MONGO_SERVER);
+    conf.set("bulkload.mongo.servers", args[2]);
     conf.set("bulkload.mongo.db", MONGO_DB);
     conf.set("bulkload.mongo.collection", MONGO_COLLECTION);
     conf.set("bulkload.mongo.dataset.type", args[1]);
