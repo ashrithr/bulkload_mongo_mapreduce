@@ -121,6 +121,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
 
       document = new BasicDBObject(amiDvcFieldName, meterId)
                     .append(dayFieldName, recordedDay);
+
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (!rrKwhValues.isEmpty()) {
           document.append(registerFieldPrefix + "_kwh", rrKwhValues);
@@ -156,7 +157,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       }
 
       builder.insert(document);
-      System.out.println(String.format("mid:%s; day:%s; _kwh:%s", meterId, recordedDay, rrKwdValues.toString()));
+      System.out.println(String.format("mid:%s; day:%s; _kwh:%s", meterId, recordedDay, rrKwhValues.toString()));
       dbCounter++;
 
       if (dbCounter % batchSize == 0) {
