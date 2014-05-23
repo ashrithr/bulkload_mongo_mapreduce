@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -155,6 +156,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       }
 
       builder.insert(document);
+      System.out.println(String.format("mid:%s; day:%s; _kwh:%s", meterId, recordedDay, rrKwdValues.toString()));
       dbCounter++;
 
       if (dbCounter % batchSize == 0) {
