@@ -6,10 +6,8 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.log4j.Logger;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,6 +29,21 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   private BulkWriteOperation builder;
   private BulkWriteResult result;
   private WriteConcern writeConcern;
+  //private List<DBObject> documents = new ArrayList<DBObject>();
+
+  // interval values
+  private List<String> irKwhValues = new ArrayList<String>();
+  private List<String> irKwdValues = new ArrayList<String>();
+  private List<String> irKvarValues = new ArrayList<String>();
+  private List<String> irKvrmsValues = new ArrayList<String>();
+  private List<String> irVValues = new ArrayList<String>();
+  // register values
+  private List<String> rrKwhValues = new ArrayList<String>();
+  private List<String> rrKwdValues = new ArrayList<String>();
+  private List<String> rrKvarValues = new ArrayList<String>();
+  private List<String> rrKvrmsValues = new ArrayList<String>();
+  private List<String> rrVValues = new ArrayList<String>();
+
 
   private static WriteResult update(DBCollection collection, BasicDBObject criteria, BasicDBObject insertDoc) {
     // db.collection.update(criteria, objNew, upsert, multi)
@@ -68,18 +81,6 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
 
   @Override
   protected void reduce(Text meterDayKey, Iterable<Text> meterValues, Context context) {
-    // interval values
-    List<String> irKwhValues = new ArrayList<String>();
-    List<String> irKwdValues = new ArrayList<String>();
-    List<String> irKvarValues = new ArrayList<String>();
-    List<String> irKvrmsValues = new ArrayList<String>();
-    List<String> irVValues = new ArrayList<String>();
-    // register values
-    List<String> rrKwhValues = new ArrayList<String>();
-    List<String> rrKwdValues = new ArrayList<String>();
-    List<String> rrKvarValues = new ArrayList<String>();
-    List<String> rrKvrmsValues = new ArrayList<String>();
-    List<String> rrVValues = new ArrayList<String>();
     BasicDBObject document;
 
     for(Text meterValue: meterValues) {
@@ -87,7 +88,6 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       String readingVal  = meterValue.toString().split("#")[1];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
-          System.out.println("Adding kwh value to array: " + readingVal);
           rrKwhValues.add(readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
           rrKwdValues.add(readingVal);
@@ -118,56 +118,83 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       String meterId     = meterDayKey.toString().split("#")[0];
       String recordedDay = meterDayKey.toString().split("#")[1];
 
-      document = new BasicDBObject(amiDvcFieldName, meterId)
-                    .append(dayFieldName, recordedDay);
+      document = new BasicDBObject();
+      document.append(amiDvcFieldName, meterId);
+      document.append(dayFieldName, recordedDay);
 
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (!rrKwhValues.isEmpty()) {
-          System.out.println(rrKwhValues.toString());
-          document.append(registerFieldPrefix + "_kwh", rrKwhValues);
-          System.out.println(document.toString());
+          // If not converted to just array, bulk insertion is acting weird
+          String[] kwhValues = new String[rrKwhValues.size()];
+          kwhValues = rrKwhValues.toArray(kwhValues);
+          document.put(registerFieldPrefix + "_kwh", kwhValues);
         }
         if (!rrKwdValues.isEmpty()) {
-          document.append(registerFieldPrefix + "_kwd", rrKwdValues);
+          String[] kwdValues = new String[rrKwdValues.size()];
+          kwdValues = rrKwdValues.toArray(kwdValues);
+          document.put(registerFieldPrefix + "_kwd", kwdValues);
         }
         if (!rrKvarValues.isEmpty()) {
-          document.append(registerFieldPrefix + "_kvar", rrKvarValues);
+          String[] kvarValues = new String[rrKvarValues.size()];
+          kvarValues = rrKvarValues.toArray(kvarValues);
+          document.put(registerFieldPrefix + "_kvar", kvarValues);
         }
         if (!rrKvrmsValues.isEmpty()) {
-          document.append(registerFieldPrefix + "_kvrms", rrKvrmsValues);
+          String[] kvrmsValues = new String[rrKvrmsValues.size()];
+          kvrmsValues = rrKvrmsValues.toArray(kvrmsValues);
+          document.put(registerFieldPrefix + "_kvrms", kvrmsValues);
         }
         if (!rrVValues.isEmpty()) {
-          document.append(registerFieldPrefix + "_v", rrVValues);
+          String[] vValues = new String[rrVValues.size()];
+          vValues = rrVValues.toArray(vValues);
+          document.put(registerFieldPrefix + "_v", vValues);
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (!irKwhValues.isEmpty()) {
-          document.append(intervalFieldPrefix + "_kwh", irKwhValues);
+          String[] kwhValues = new String[irKwhValues.size()];
+          kwhValues = irKwhValues.toArray(kwhValues);
+          document.put(intervalFieldPrefix + "_kwh", kwhValues);
         }
         if (!irKwdValues.isEmpty()) {
-          document.append(intervalFieldPrefix + "_kwd", irKwdValues);
+          String[] kwdValues = new String[irKwdValues.size()];
+          kwdValues = irKwdValues.toArray(kwdValues);
+          document.put(intervalFieldPrefix + "_kwd", kwdValues);
         }
         if (!irKvarValues.isEmpty()) {
-          document.append(intervalFieldPrefix + "_kvar", irKvarValues);
+          String[] kvarValues = new String[irKvarValues.size()];
+          kvarValues = irKvarValues.toArray(kvarValues);
+          document.put(intervalFieldPrefix + "_kvar", kvarValues);
         }
         if (!irKvrmsValues.isEmpty()) {
-          document.append(intervalFieldPrefix + "_kvrms", irKvrmsValues);
+          String[] kvrmsValues = new String[irKvrmsValues.size()];
+          kvrmsValues = irKvrmsValues.toArray(kvrmsValues);
+          document.put(intervalFieldPrefix + "_kvrms", kvrmsValues);
         }
         if (!irVValues.isEmpty()) {
-          document.append(intervalFieldPrefix + "_v", irVValues);
+          String[] vValues = new String[irVValues.size()];
+          vValues = irVValues.toArray(vValues);
+          document.put(intervalFieldPrefix + "_v", vValues);
         }
       }
 
       builder.insert(document);
-      System.out.println(String.format("mid:%s; day:%s; _kwh:%s", meterId, recordedDay, rrKwhValues.toString()));
+      //documents.add(document);
+      //System.out.println(document.toString());
+      //System.out.println(String.format("mid:%s; day:%s; _kwh:%s", meterId, recordedDay, rrKwhValues.toString()));
       dbCounter++;
+
+      //collection.insert(document);
 
       if (dbCounter % batchSize == 0) {
         result = builder.execute(writeConcern);
+        //collection.insert(documents, writeConcern);
         context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_INSERT_OPS).increment(result.getInsertedCount());
+        //context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_INSERT_OPS).increment(documents.size());
+        //documents.clear();
         builder = collection.initializeUnorderedBulkOperation();
       }
     } catch (Exception ex) {
-      logger.error(ex);
+      logger.error(ex.getMessage());
       context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);
     }
 
@@ -190,11 +217,14 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   @Override
   protected void cleanup(Context context) throws IOException, InterruptedException {
     if (builder != null) {
+    //if (documents != null && documents.size() > 0) {
       try {
         result = builder.execute(writeConcern);
         context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_INSERT_OPS).increment(result.getInsertedCount());
+        //collection.insert(documents, writeConcern);
+        //context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_INSERT_OPS).increment(documents.size());
       } catch (Exception ex) {
-        logger.error(ex);
+        logger.error(ex.getMessage());
         context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);
       }
     }
