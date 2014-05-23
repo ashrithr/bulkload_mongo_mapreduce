@@ -163,7 +163,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
         builder = collection.initializeUnorderedBulkOperation();
       }
     } catch (Exception ex) {
-      logger.debug(ex);
+      logger.error(ex);
       context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);
     }
 
@@ -190,7 +190,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
         result = builder.execute(writeConcern);
         context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_MONGO_INSERT_OPS).increment(result.getInsertedCount());
       } catch (Exception ex) {
-        logger.debug(ex);
+        logger.error(ex);
         context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_ERRORS).increment(1);
       }
     }
