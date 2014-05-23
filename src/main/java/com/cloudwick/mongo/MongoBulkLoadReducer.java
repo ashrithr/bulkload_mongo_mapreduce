@@ -89,6 +89,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
         if (readingType.matches("(?i:.*kwh.*)")) {
           System.out.println("Adding kwh value to array: " + readingVal);
           rrKwhValues.add(readingVal);
+          System.out.println(rrKwhValues.toString());
         } else if (readingType.matches("(?i:.*kwd.*)")) {
           rrKwdValues.add(readingVal);
         } else if (readingType.matches("(?i:.*kvar.*)")) {
