@@ -122,35 +122,35 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
                     .append(dayFieldName, recordedDay);
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (!rrKwhValues.isEmpty()) {
-          document.put(registerFieldPrefix + "_kwh", rrKwhValues);
+          document.append(registerFieldPrefix + "_kwh", rrKwhValues);
         }
         if (!rrKwdValues.isEmpty()) {
-          document.put(registerFieldPrefix + "_kwd", rrKwdValues);
+          document.append(registerFieldPrefix + "_kwd", rrKwdValues);
         }
         if (!rrKvarValues.isEmpty()) {
-          document.put(registerFieldPrefix + "_kvar", rrKvarValues);
+          document.append(registerFieldPrefix + "_kvar", rrKvarValues);
         }
         if (!rrKvrmsValues.isEmpty()) {
-          document.put(registerFieldPrefix + "_kvrms", rrKvrmsValues);
+          document.append(registerFieldPrefix + "_kvrms", rrKvrmsValues);
         }
         if (!rrVValues.isEmpty()) {
-          document.put(registerFieldPrefix + "_v", rrVValues);
+          document.append(registerFieldPrefix + "_v", rrVValues);
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (!irKwhValues.isEmpty()) {
-          document.put(intervalFieldPrefix + "_kwh", irKwhValues);
+          document.append(intervalFieldPrefix + "_kwh", irKwhValues);
         }
         if (!irKwdValues.isEmpty()) {
-          document.put(intervalFieldPrefix + "_kwd", irKwdValues);
+          document.append(intervalFieldPrefix + "_kwd", irKwdValues);
         }
         if (!irKvarValues.isEmpty()) {
-          document.put(intervalFieldPrefix + "_kvar", irKvarValues);
+          document.append(intervalFieldPrefix + "_kvar", irKvarValues);
         }
         if (!irKvrmsValues.isEmpty()) {
-          document.put(intervalFieldPrefix + "_kvrms", irKvrmsValues);
+          document.append(intervalFieldPrefix + "_kvrms", irKvrmsValues);
         }
         if (!irVValues.isEmpty()) {
-          document.put(intervalFieldPrefix + "_v", irVValues);
+          document.append(intervalFieldPrefix + "_v", irVValues);
         }
       }
 
@@ -168,16 +168,19 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
     }
 
     // clear all the DBList's
-    irKwhValues.clear();
-    irKwdValues.clear();
-    irKvarValues.clear();
-    irKvrmsValues.clear();
-    irVValues.clear();
-    rrKwhValues.clear();
-    rrKwdValues.clear();
-    rrKvarValues.clear();
-    rrKvrmsValues.clear();
-    rrVValues.clear();
+    if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
+      rrKwhValues.clear();
+      rrKwdValues.clear();
+      rrKvarValues.clear();
+      rrKvrmsValues.clear();
+      rrVValues.clear();
+    } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
+      irKwhValues.clear();
+      irKwdValues.clear();
+      irKvarValues.clear();
+      irKvrmsValues.clear();
+      irVValues.clear();
+    }
   }
 
   @Override
