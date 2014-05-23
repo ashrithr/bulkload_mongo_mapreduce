@@ -32,20 +32,6 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   private BulkWriteResult result;
   private WriteConcern writeConcern;
 
-  // interval values
-  private List<String> irKwhValues = new ArrayList<String>();
-  private List<String> irKwdValues = new ArrayList<String>();
-  private List<String> irKvarValues = new ArrayList<String>();
-  private List<String> irKvrmsValues = new ArrayList<String>();
-  private List<String> irVValues = new ArrayList<String>();
-  // register values
-  private List<String> rrKwhValues = new ArrayList<String>();
-  private List<String> rrKwdValues = new ArrayList<String>();
-  private List<String> rrKvarValues = new ArrayList<String>();
-  private List<String> rrKvrmsValues = new ArrayList<String>();
-  private List<String> rrVValues = new ArrayList<String>();
-
-
   private static WriteResult update(DBCollection collection, BasicDBObject criteria, BasicDBObject insertDoc) {
     // db.collection.update(criteria, objNew, upsert, multi)
     return collection.update(criteria, insertDoc, true, false);
@@ -82,6 +68,18 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
 
   @Override
   protected void reduce(Text meterDayKey, Iterable<Text> meterValues, Context context) {
+    // interval values
+    List<String> irKwhValues = new ArrayList<String>();
+    List<String> irKwdValues = new ArrayList<String>();
+    List<String> irKvarValues = new ArrayList<String>();
+    List<String> irKvrmsValues = new ArrayList<String>();
+    List<String> irVValues = new ArrayList<String>();
+    // register values
+    List<String> rrKwhValues = new ArrayList<String>();
+    List<String> rrKwdValues = new ArrayList<String>();
+    List<String> rrKvarValues = new ArrayList<String>();
+    List<String> rrKvrmsValues = new ArrayList<String>();
+    List<String> rrVValues = new ArrayList<String>();
     BasicDBObject document;
 
     for(Text meterValue: meterValues) {
@@ -89,6 +87,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
       String readingVal  = meterValue.toString().split("#")[1];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
+          System.out.println("Adding kwh value to array: " + readingVal);
           rrKwhValues.add(readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
           rrKwdValues.add(readingVal);
