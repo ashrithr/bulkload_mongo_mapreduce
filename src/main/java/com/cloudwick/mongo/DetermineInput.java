@@ -20,27 +20,45 @@ import java.util.List;
 
 public class DetermineInput extends Configured implements Tool {
 
+  enum BULKLOAD {
+    NUM_RECORDS,
+    PARSE_ERRORS,
+    MALFORMED_RECORDS_INTERVAL
+  }
+
   public static class InputMapper extends Mapper<LongWritable, Text, Text, Text> {
     // for each input line of input file
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-      String[] tokens = value.toString().split("\\t");
+      String line = value.toString();
+      String[] tokens = line.split("\\t");
       String mid;
       String day;
       String uom;
       String mrdg;
-      String readingType;
-      String registerFieldPrefix = "rr";
+      String hour;
 
       if(tokens.length > 1) {
-        mid = tokens[0];
-        String readDate = tokens[1];
-        String date[] = readDate.split("\\s+");
-        day = date[0];
-        uom = tokens[6];
-        mrdg = tokens[10];
-
-        context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s", uom, mrdg)));
+        if (tokens.length != 14) {
+          context.getCounter(DetermineInput.BULKLOAD.MALFORMED_RECORDS_INTERVAL).increment(1);
+          System.err.println("Malformed INTERVAL record: " + line);
+        } else {
+          try {
+            mid = tokens[0];
+            String readDate = tokens[1];
+            String date[] = readDate.split("\\s+");
+            day = date[0];
+            hour = date[1].split(":")[0];
+            uom = tokens[6];
+            mrdg = tokens[9];
+            context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s#%s", hour, uom, mrdg)));
+            context.getCounter(DetermineInput.BULKLOAD.NUM_RECORDS).increment(1);
+          } catch (Exception ex) {
+            context.getCounter(DetermineInput.BULKLOAD.PARSE_ERRORS).increment(1);
+            System.err.println("Parse failed on record: " + line);
+            System.err.println(Arrays.toString(ex.getStackTrace()));
+          }
+        }
       }
     }
   }
@@ -101,11 +119,11 @@ public class DetermineInput extends Configured implements Tool {
     job.setMapperClass(InputMapper.class);
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(Text.class);
-    job.setReducerClass(OutputReducer.class);
+    //job.setReducerClass(OutputReducer.class);
     job.setOutputKeyClass(NullWritable.class);
     job.setOutputValueClass(NullWritable.class);
     job.setOutputFormatClass(NullOutputFormat.class);
-    job.setNumReduceTasks(1);
+    job.setNumReduceTasks(0);
     int ret = job.waitForCompletion(true) ? 0 : 1;
 
     return ret;
