@@ -44,10 +44,10 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
             String readDate = tokens[1];
             String date[] = readDate.split("\\s+");
             day = date[0];
-            hour = date[1].split(":")[0];
+            hour = date[1];
             uom = tokens[6];
             mrdg = tokens[10];
-            context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s#%s", hour, uom, mrdg)));
+            context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
           } catch (Exception ex) {
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
@@ -64,10 +64,10 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
             String readDate = tokens[1];
             String date[] = readDate.split("\\s+");
             day = date[0];
-            hour = date[1].split(":")[0];
+            hour = date[1];
             uom = tokens[6];
             mrdg = tokens[9];
-            context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s#%s", hour, uom, mrdg)));
+            context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
           } catch (Exception ex) {
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
