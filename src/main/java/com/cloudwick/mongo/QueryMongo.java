@@ -1,7 +1,6 @@
 package com.cloudwick.mongo;
 
 import com.mongodb.*;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.net.UnknownHostException;
 import java.text.ParseException;
@@ -36,7 +35,8 @@ public class QueryMongo {
   }
 
   public static List<String> query(String mid, String start, String end) {
-    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH");
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    df.setTimeZone(TimeZone.getTimeZone("GMT"));
     BasicDBObject query = new BasicDBObject();
     query.put("mid", mid);
     query.put("rd", new BasicDBObject("$gte", start).append("$lte", end));
@@ -49,6 +49,7 @@ public class QueryMongo {
       cursor = collection.find(query, fields);
       while(cursor.hasNext()) {
         DBObject o = cursor.next();
+        System.out.println(o);
         BasicDBList values = (BasicDBList) o.get("ir_kwh");
         boolean firstDoc = true;
         for (Object value : values) {

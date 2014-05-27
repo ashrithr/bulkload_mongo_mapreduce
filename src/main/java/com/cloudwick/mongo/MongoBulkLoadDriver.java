@@ -92,7 +92,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     conf.set("bulkload.mongo.write.concern", MONGO_WRITE_CONCERN);
 
     Job job = Job.getInstance(conf);
-    job.setJobName("bulk load mongo " + MONGO_COLLECTION);
+    job.setJobName("bulk load mongo " + MONGO_COLLECTION + args[1]);
     job.setJarByClass(MongoBulkLoadDriver.class);
     FileInputFormat.addInputPath(job, inputDir);
     job.setMapperClass(MongoBulkLoadMapper.class);
@@ -108,7 +108,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     int ret = job.waitForCompletion(true) ? 0 : 1;
     Date endTime = new Date();
     System.out.println("Job ended: " + endTime);
-    System.out.println("The job took " + (endTime.getTime() - startTime.getTime()) /1000 + " seconds.");
+    System.out.println("The job took " + (endTime.getTime() - startTime.getTime())/1000 + " seconds.");
 
     return ret;
   }

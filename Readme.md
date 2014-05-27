@@ -6,13 +6,16 @@ Building a assembly jar:
 mvn clean compile assembly:single
 ```
 
-Optional: Create index on mongo collection being used to improve the performance of update operations
+Optional: Create index on mongo collection being used to improve the performance of read operations
 
 > Note: use the appropriate value for database, collection and field names as used in the mapper class of the application
 
 ```
 use bulk
+sh.enableSharding("bulk")
+db.ami.ensureIndex({"_id": "hashed"})
 db.ami.ensureIndex({mid: 1, rd: 1})
+sh.shardCollection("bulk.ami", { "_id": "hashed" })
 ```
 
 
@@ -28,12 +31,15 @@ hadoop jar bulkload-*-SNAPSHOT-jar-with-dependencies.jar \
 
 Examples:
 
-Running bulk loader against register dataset located at hdfs path `/register/data` and connecting to mongo servers at "mongos1.cw.com:27017" and "mongos2.cw.com:27017"
+Running bulk loader against register dataset located at hdfs path `/register/data` and connecting to mongo servers
+at "mongos1.cw.com:27017" and "mongos2.cw.com:27017"
 
 ```
 hadoop jar bulkload-*-SNAPSHOT-jar-with-dependencies.jar \
   com.cloudwick.mongo.MongoBulkLoadDriver \
   -Dmapreduce.job.reduces=2 \
+  -Dmapreduce.task.io.sort.factor=25 \
+  -Dmapreduce.task.io.sort.mb=256 \
   /register/data \
   register \
   "mongos1.cw.com:27017,mongos2.cw.com:27017"
