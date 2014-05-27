@@ -1,10 +1,12 @@
 package com.cloudwick.mongo;
 
 import com.mongodb.*;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Description goes here
@@ -24,24 +26,59 @@ public class QueryMongo {
     List<MongoCredential> creds = new ArrayList<MongoCredential>();
     creds.add(MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray()));
     List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
-    for (String server : servers.split(";")) {
+    for (String server : Arrays.asList(servers.split(","))) {
       serverAddresses.add(new ServerAddress(server));
     }
     mongoClient = new MongoClient(serverAddresses, creds);
+    System.out.println("Connected to: " + mongoClient.getAddress());
     DB db = mongoClient.getDB(databaseName);
     collection = db.getCollection(collectionName);
   }
 
-  public static List<DBObject> query(String mid, String start, String end) {
-    List<DBObject> out = new ArrayList<DBObject>();
+  public static List<String> query(String mid, String start, String end) {
+    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH");
     BasicDBObject query = new BasicDBObject();
     query.put("mid", mid);
-    query.put("rd", new BasicDBObject("gte", start).append("lt", end));
-    DBCursor cursor = collection.find(query);
-    while(cursor.hasNext()) {
-      out.add(cursor.next());
+    query.put("rd", new BasicDBObject("$gte", start).append("$lte", end));
+    // fields to output
+    BasicDBObject fields = new BasicDBObject();
+    fields.put("_id", false); // do not output _id
+    DBCursor cursor = null;
+    String json = "";
+    try {
+      cursor = collection.find(query, fields);
+      while(cursor.hasNext()) {
+        DBObject o = cursor.next();
+        BasicDBList values = (BasicDBList) o.get("ir_kwh");
+        boolean firstDoc = true;
+        for (Object value : values) {
+          String[] splits = value.toString().split("#");
+          if (!firstDoc)
+            json += ",";
+          if (firstDoc)
+            firstDoc = false;
+          json += "{ \"x\" : ";
+          json += df.parse(o.get("rd") + " " + splits[0]).getTime();
+          json += ", \"y\" : ";
+          json += splits[1];
+          json += " }";
+        }
+      }
+    } catch (ParseException e) {
+      e.printStackTrace();
+    } finally {
+      if (cursor != null) {
+        cursor.close();
+      }
     }
-    return out;
+    return new ArrayList<String>(Arrays.asList(json));
+  }
+
+  public static void findTenDocs() {
+    DBCursor cursor = collection.find().limit(10);
+    while(cursor.hasNext()) {
+      System.out.println(cursor.next());
+    }
   }
 
   public static void main(String[] args) throws UnknownHostException {
@@ -49,13 +86,13 @@ public class QueryMongo {
       System.err.println("Required number of args 4 instead got " + args.length);
       System.exit(1);
     }
+    System.out.println("Args: " + Arrays.toString(args));
     String servers = args[0];
     String meterId = args[1];
     String startDate = args[2];
     String endData = args[3];
     setup(servers);
-    for (DBObject o: query(meterId, startDate, endData)) {
-      System.out.println(o);
-    }
+
+    System.out.println(query(meterId, startDate, endData));
   }
 }
