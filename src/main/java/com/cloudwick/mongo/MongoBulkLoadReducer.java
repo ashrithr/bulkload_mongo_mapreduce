@@ -82,42 +82,44 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   @Override
   protected void reduce(Text meterDayKey, Iterable<Text> meterValues, Context context) {
     BasicDBObject document;
+    String[] keySplits  = meterDayKey.toString().split("#");
+    String meterId      = keySplits[0];
+    String recordedDay  = keySplits[1];
+    String recordedHour = keySplits[2];
 
     for(Text meterValue: meterValues) {
-      String readingType = meterValue.toString().split("#")[0];
-      String readingVal  = meterValue.toString().split("#")[1];
+      String[] splits = meterValue.toString().split("#");
+      String readingType = splits[0];
+      String readingVal  = splits[1];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
-          rrKwhValues.add(readingVal);
+          rrKwhValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
-          rrKwdValues.add(readingVal);
+          rrKwdValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kvar.*)")) {
-          rrKvarValues.add(readingVal);
+          rrKvarValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kvrms.*)")) {
-          rrKvrmsValues.add(readingVal);
+          rrKvrmsValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*v.*)")) {
-          rrVValues.add(readingVal);
+          rrVValues.add(recordedHour + "#" + readingVal);
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
-          irKwhValues.add(readingVal);
+          irKwhValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kwd.*)")) {
-          irKwdValues.add(readingVal);
+          irKwdValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kvar.*)")) {
-          irKvarValues.add(readingVal);
+          irKvarValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*kvrms.*)")) {
-          irKvrmsValues.add(readingVal);
+          irKvrmsValues.add(recordedHour + "#" + readingVal);
         } else if (readingType.matches("(?i:.*v.*)")) {
-          irVValues.add(readingVal);
+          irVValues.add(recordedHour + "#" + readingVal);
         }
       }
     }
 
     // Build out the mongo document
     try {
-      String meterId     = meterDayKey.toString().split("#")[0];
-      String recordedDay = meterDayKey.toString().split("#")[1];
-
       document = new BasicDBObject();
       document.append(amiDvcFieldName, meterId);
       document.append(dayFieldName, recordedDay);

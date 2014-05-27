@@ -28,6 +28,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
     String[] tokens = line.split("\\t");
     String mid;
     String day;
+    String hour;
     String uom;
     String mrdg;
 
@@ -41,9 +42,10 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
           String readDate = tokens[1];
           String date[] = readDate.split("\\s+");
           day = date[0];
+          hour = date[1].split(":")[0];
           uom = tokens[6];
           mrdg = tokens[10];
-          context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s", uom, mrdg)));
+          context.write(new Text(String.format("%s#%s#%s", mid, day, hour)), new Text(String.format("%s#%s", uom, mrdg)));
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (tokens.length > 14) {
@@ -54,9 +56,10 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
           String readDate = tokens[1];
           String date[] = readDate.split("\\s+");
           day = date[0];
+          hour = date[1].split(":")[0];
           uom = tokens[6];
           mrdg = tokens[9];
-          context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s", uom, mrdg)));
+          context.write(new Text(String.format("%s#%s#%s", mid, day, hour)), new Text(String.format("%s#%s", uom, mrdg)));
         }
       }
     }
