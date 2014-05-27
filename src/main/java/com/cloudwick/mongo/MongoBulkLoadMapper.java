@@ -6,6 +6,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.log4j.Logger;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Mapper to process register or interval meter records and place them in mongo
@@ -46,7 +47,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
             hour = date[1].split(":")[0];
             uom = tokens[6];
             mrdg = tokens[10];
-            context.write(new Text(String.format("%s#%s#%s", mid, day, hour)), new Text(String.format("%s#%s", uom, mrdg)));
+            context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s#%s", hour, uom, mrdg)));
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
           } catch (Exception ex) {
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
@@ -66,11 +67,12 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
             hour = date[1].split(":")[0];
             uom = tokens[6];
             mrdg = tokens[9];
-            context.write(new Text(String.format("%s#%s#%s", mid, day, hour)), new Text(String.format("%s#%s", uom, mrdg)));
+            context.write(new Text(String.format("%s#%s", mid, day)), new Text(String.format("%s#%s#%s", hour, uom, mrdg)));
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
           } catch (Exception ex) {
             context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
             System.err.println("Malformed INTERVAL record: " + line);
+            System.err.println(Arrays.toString(ex.getStackTrace()));
           }
         }
       }

@@ -85,12 +85,12 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
     String[] keySplits  = meterDayKey.toString().split("#");
     String meterId      = keySplits[0];
     String recordedDay  = keySplits[1];
-    String recordedHour = keySplits[2];
 
     for(Text meterValue: meterValues) {
       String[] splits = meterValue.toString().split("#");
-      String readingType = splits[0];
-      String readingVal  = splits[1];
+      String recordedHour = splits[0];
+      String readingType = splits[1];
+      String readingVal  = splits[2];
       if (dataSetFormat.equalsIgnoreCase("REGISTER")) {
         if (readingType.matches("(?i:.*kwh.*)")) {
           rrKwhValues.add(recordedHour + "#" + readingVal);
