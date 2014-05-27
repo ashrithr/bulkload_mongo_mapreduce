@@ -103,8 +103,6 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     job.setOutputValueClass(NullWritable.class);
     job.setOutputFormatClass(NullOutputFormat.class);
 
-    job.setNumReduceTasks(1);
-
     Date startTime = new Date();
     System.out.println("Job Started: " + startTime);
     int ret = job.waitForCompletion(true) ? 0 : 1;

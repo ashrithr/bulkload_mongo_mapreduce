@@ -33,6 +33,7 @@ Running bulk loader against register dataset located at hdfs path `/register/dat
 ```
 hadoop jar bulkload-*-SNAPSHOT-jar-with-dependencies.jar \
   com.cloudwick.mongo.MongoBulkLoadDriver \
+  -Dmapred.reduce.tasks=2 \
   /register/data \
   register \
   "mongos1.cw.com:27017,mongos2.cw.com:27017"
