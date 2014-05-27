@@ -50,6 +50,7 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     NUM_MONGO_INSERT_OPS,
     NUM_ERRORS,
     NUM_RECORDS,
+    PARSE_ERRORS,
     MALFORMED_RECORDS_INTERVAL,
     MALFORMED_RECORDS_REGISTER
   }
