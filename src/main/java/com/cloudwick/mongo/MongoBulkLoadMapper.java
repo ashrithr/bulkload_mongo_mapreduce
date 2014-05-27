@@ -34,7 +34,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
 
     if(tokens.length > 1) {
       if(dataSetFormat.equalsIgnoreCase("REGISTER")) {
-        if (tokens.length > 13) {
+        if (tokens.length != 13) {
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_REGISTER).increment(1);
           System.err.println("Malformed REGISTER record: " + line);
         } else {
@@ -54,7 +54,7 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
           }
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
-        if (tokens.length > 14) {
+        if (tokens.length != 14) {
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_INTERVAL).increment(1);
           System.err.println("Malformed INTERVAL record: " + line);
         } else {
