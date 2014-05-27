@@ -39,41 +39,30 @@ public class MongoBulkLoadMapper extends Mapper<LongWritable, Text, Text, Text> 
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_REGISTER).increment(1);
           System.err.println("Malformed REGISTER record: " + line);
         } else {
-          try {
-            mid = tokens[0];
-            String readDate = tokens[1];
-            String date[] = readDate.split("\\s+");
-            day = date[0];
-            hour = date[1];
-            uom = tokens[6];
-            mrdg = tokens[10];
-            context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
-          } catch (Exception ex) {
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
-            // System.err.println("Malformed REGISTER record: " + line);
-          }
+          mid = tokens[0];
+          String readDate = tokens[1];
+          String date[] = readDate.split("\\s+");
+          day = date[0];
+          hour = date[1].substring(0, 5);
+          uom = tokens[6];
+          mrdg = tokens[10];
+          context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
+          context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
         }
       } else if (dataSetFormat.equalsIgnoreCase("INTERVAL")) {
         if (tokens.length != 14) {
           context.getCounter(MongoBulkLoadDriver.BULKLOAD.MALFORMED_RECORDS_INTERVAL).increment(1);
           System.err.println("Malformed INTERVAL record: " + line);
         } else {
-          try {
-            mid = tokens[0];
-            String readDate = tokens[1];
-            String date[] = readDate.split("\\s+");
-            day = date[0];
-            hour = date[1];
-            uom = tokens[6];
-            mrdg = tokens[9];
-            context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
-          } catch (Exception ex) {
-            context.getCounter(MongoBulkLoadDriver.BULKLOAD.PARSE_ERRORS).increment(1);
-            // System.err.println("Malformed INTERVAL record: " + line);
-            // System.err.println(Arrays.toString(ex.getStackTrace()));
-          }
+          mid = tokens[0];
+          String readDate = tokens[1];
+          String date[] = readDate.split("\\s+");
+          day = date[0];
+          hour = date[1].substring(0, 5);
+          uom = tokens[6];
+          mrdg = tokens[9];
+          context.write(new Text(mid + "#" + day), new Text(hour + "#" + uom + "#" + mrdg));
+          context.getCounter(MongoBulkLoadDriver.BULKLOAD.NUM_RECORDS).increment(1);
         }
       }
     }
