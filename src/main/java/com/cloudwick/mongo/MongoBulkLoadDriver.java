@@ -37,7 +37,8 @@ import java.util.Date;
 public class MongoBulkLoadDriver  extends Configured implements Tool {
   // private static final String MONGO_SERVER = "localhost:27017";
   private static final String MONGO_DB = "bulk";
-  private static final String MONGO_COLLECTION = "ami";
+  private static final String MONGO_COLLECTION_REGISTER = "register_read";
+  private static final String MONGO_COLLECTION_INTERVAL = "interval_read";
   private static final String AMI_DVC_FIELD_NAME = "mid";
   private static final String DAY_FIELD_NAME = "rd";
   private static final String INTERVAL_READ_FIELD_PREFIX = "ir";
@@ -83,7 +84,11 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     conf.set("bulkload.mongo.user", MONGO_USER);
     conf.set("bulkload.mongo.password", MONGO_PASSWORD);
     conf.set("bulkload.mongo.db", MONGO_DB);
-    conf.set("bulkload.mongo.collection", MONGO_COLLECTION);
+    if(args[1].equalsIgnoreCase("REGISTER")) {
+      conf.set("bulkload.mongo.collection", MONGO_COLLECTION_REGISTER);
+    } else {
+      conf.set("bulkload.mongo.collection", MONGO_COLLECTION_INTERVAL);
+    }
     conf.set("bulkload.mongo.dataset.type", args[1]);
     conf.set("bulkload.mongo.field.ami_dvc", AMI_DVC_FIELD_NAME);
     conf.set("bulkload.mongo.field.day", DAY_FIELD_NAME);
@@ -92,7 +97,8 @@ public class MongoBulkLoadDriver  extends Configured implements Tool {
     conf.set("bulkload.mongo.write.concern", MONGO_WRITE_CONCERN);
 
     Job job = Job.getInstance(conf);
-    job.setJobName("bulk load mongo " + MONGO_COLLECTION + args[1]);
+    job.setJobName("bulk load mongo " +
+        (args[1].equalsIgnoreCase("REGISTER") ? MONGO_COLLECTION_REGISTER : MONGO_COLLECTION_INTERVAL) + " " + args[1]);
     job.setJarByClass(MongoBulkLoadDriver.class);
     FileInputFormat.addInputPath(job, inputDir);
     job.setMapperClass(MongoBulkLoadMapper.class);

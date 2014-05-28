@@ -24,7 +24,7 @@ public class MongoBulkLoadReducer  extends Reducer<Text, Text, NullWritable, Nul
   private String dayFieldName;
   private String intervalFieldPrefix;
   private String registerFieldPrefix;
-  private long batchSize = 512;
+  private long batchSize = 256;
   private long dbCounter = 0;
   private BulkWriteOperation builder;
   private BulkWriteResult result;

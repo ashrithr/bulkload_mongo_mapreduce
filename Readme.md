@@ -13,9 +13,12 @@ Optional: Create index on mongo collection being used to improve the performance
 ```
 use bulk
 sh.enableSharding("bulk")
-db.ami.ensureIndex({"_id": "hashed"})
-db.ami.ensureIndex({mid: 1, rd: 1})
-sh.shardCollection("bulk.ami", { "_id": "hashed" })
+#db.ami.ensureIndex({"_id": "hashed"})
+db.register_reads.ensureIndex({mid: 1, rd: 1})
+db.interval_reads.ensureIndex({mid: 1, rd: 1})
+#sh.shardCollection("bulk.ami", { "_id": "hashed" })
+sh.shardCollection("bulk.register_reads", {"mid": 1, "rd": 1})
+sh.shardCollection("bulk.interval_reads", {"mid": 1, "rd": 1})
 ```
 
 
