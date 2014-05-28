@@ -19,23 +19,41 @@ public class QueryMongo {
   private static String username = "bulkDBAdmin";
   private static String password = "password";
   private static String databaseName = "bulk";
-  private static String collectionName = "ami";
+  private static String registerCollectionName = "register_reads";
+  private static String intervalCollectionName = "interval_reads";
+  private static String registerFieldName = "rr_kwh";
+  private static String intervalFieldName = "ir_kwh";
 
-  public static void setup(String servers) throws UnknownHostException {
+  public static void setup(String servers, String collectionFormat) throws UnknownHostException {
     List<MongoCredential> creds = new ArrayList<MongoCredential>();
     creds.add(MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray()));
     List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
+
     for (String server : Arrays.asList(servers.split(","))) {
       serverAddresses.add(new ServerAddress(server));
     }
+
     mongoClient = new MongoClient(serverAddresses, creds);
     System.out.println("Connected to: " + mongoClient.getAddress());
     DB db = mongoClient.getDB(databaseName);
+    String collectionName = null;
+
+    if(collectionFormat.equalsIgnoreCase("REGISTER"))
+      collectionName = registerCollectionName;
+    else
+      collectionName = intervalCollectionName;
+
     collection = db.getCollection(collectionName);
   }
 
-  public static List<String> query(String mid, String start, String end) {
+  public static List<String> query(String collectionFormat, String mid, String start, String end) {
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    String valuesFieldName = null;
+    if(collectionFormat.equalsIgnoreCase("REGISTER"))
+      valuesFieldName = registerFieldName;
+    else
+      valuesFieldName = intervalFieldName;
+
     df.setTimeZone(TimeZone.getTimeZone("GMT"));
     BasicDBObject query = new BasicDBObject();
     query.put("mid", mid);
@@ -50,7 +68,7 @@ public class QueryMongo {
       while(cursor.hasNext()) {
         DBObject o = cursor.next();
         System.out.println(o);
-        BasicDBList values = (BasicDBList) o.get("ir_kwh");
+        BasicDBList values = (BasicDBList) o.get(valuesFieldName);
         boolean firstDoc = true;
         for (Object value : values) {
           String[] splits = value.toString().split("#");
@@ -83,17 +101,19 @@ public class QueryMongo {
   }
 
   public static void main(String[] args) throws UnknownHostException {
-    if (args.length != 4) {
-      System.err.println("Required number of args 4 instead got " + args.length);
+    if (args.length != 5) {
+      System.err.println("Required number of args 5 instead got " + args.length);
+      System.err.println("  Options: [servers] [collectionFormat] [meterID] [startDate] [endDate]");
       System.exit(1);
     }
     System.out.println("Args: " + Arrays.toString(args));
     String servers = args[0];
-    String meterId = args[1];
-    String startDate = args[2];
-    String endData = args[3];
-    setup(servers);
+    String collectionFormat = args[1];
+    String meterId = args[2];
+    String startDate = args[3];
+    String endData = args[4];
+    setup(servers, collectionFormat);
 
-    System.out.println(query(meterId, startDate, endData));
+    System.out.println(query(collectionFormat, meterId, startDate, endData));
   }
 }
