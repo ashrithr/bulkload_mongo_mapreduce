@@ -48,7 +48,7 @@ public class QueryMongo {
 
         MongoClient mongoClient = new MongoClient(serverAddresses, creds);
         MongoClient campMongoClient = new MongoClient(serverAddresses, campCreds);
-        System.out.println("Connected to: " + mongoClient.getAddress());
+        // System.out.println("Connected to: " + mongoClient.getAddress());
         DB db = mongoClient.getDB(databaseName);
         DB campDB = campMongoClient.getDB(campDatabase);
         String collectionName;
@@ -63,17 +63,17 @@ public class QueryMongo {
     }
 
     public static DBCursor queryMongo(DBCollection collection, BasicDBObject query, BasicDBObject fields) {
-        long t1 = System.nanoTime();
+        // long t1 = System.nanoTime();
         DBCursor cursor = collection.find(query, fields);
-        long t2 = System.nanoTime();
-        double timeTook = ((t2 - t1) * 1e-6);
-        System.out.println("Executing query (" + query + ") took: " + timeTook + " milliseconds");
-        queryTime += timeTook;
+        // long t2 = System.nanoTime();
+        // double timeTook = ((t2 - t1) * 1e-6);
+        // System.out.println("Executing query (" + query + ") took: " + timeTook + " milliseconds");
+        // queryTime += timeTook;
 
         return cursor;
     }
 
-    public static List<String> query(String collectionFormat, String mid, String duration) {
+    public static List<String> query(String collectionFormat, String mid, String userStart, String userEnd, String duration) {
         BasicDBObject campQuery = new BasicDBObject(premiseFieldName, mid);
         BasicDBObject campFields = new BasicDBObject("_id", false)
               .append(amiFieldName, true)
@@ -83,10 +83,12 @@ public class QueryMongo {
         //String json = "";
         StringBuilder jsonOutput = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        SimpleDateFormat daily = new SimpleDateFormat("yyyy-MM-dd");
         List<DBObject> amiDvcInfo = new ArrayList<DBObject>();
 
         try {
-            System.out.println("Getting ami_device_name and start_end dates for premise_name '" + mid + "'");
+            // System.out.println("Getting ami_device_name and start_end dates for premise_name '" + mid + "'");
             campCursor = queryMongo(campCollection, campQuery, campFields);
 
             while (campCursor.hasNext()) {
@@ -94,16 +96,34 @@ public class QueryMongo {
                 amiDvcInfo.add(obj);
             }
 
-            System.out.println("Executing '" + amiDvcInfo.size() + "' queries against '" + collection.getFullName() + "' collection");
+            // System.out.println("Executing '" + amiDvcInfo.size() + "' queries against '" + collection.getFullName() + "' collection");
             for (DBObject amiDevice : amiDvcInfo) {
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                SimpleDateFormat daily = new SimpleDateFormat("yyyy-MM-dd");
-
                 String meterId = (String) amiDevice.get(amiFieldName);
                 String startDate = (String) amiDevice.get(campStartDateFieldName);
                 String endDate = (String) amiDevice.get(campEndDateFieldName);
-
                 String valuesFieldName;
+
+                String finalStartDate = null;
+                String finalEndDate = null;
+
+                if (userStart != null) {
+                    if (daily.parse(userStart).before(daily.parse(startDate)))
+                        finalStartDate = startDate;
+                    else
+                        finalStartDate = userStart;
+                } else {
+                    finalStartDate = startDate;
+                }
+
+                if (userEnd != null) {
+                    if (daily.parse(userEnd).after(daily.parse(endDate)))
+                        finalEndDate = endDate;
+                    else
+                        finalEndDate = userEnd;
+                } else {
+                    finalEndDate = endDate;
+                }
+
                 if (collectionFormat.equalsIgnoreCase("REGISTER"))
                     valuesFieldName = registerFieldName;
                 else
@@ -113,7 +133,7 @@ public class QueryMongo {
 
                 BasicDBObject query = new BasicDBObject();
                 query.put(meterIdFieldName, meterId);
-                query.put(dateRecordedFieldName, new BasicDBObject("$gte", startDate).append("$lte", endDate));
+                query.put(dateRecordedFieldName, new BasicDBObject("$gte", finalStartDate).append("$lte", finalEndDate));
                 // fields to output
                 BasicDBObject fields = new BasicDBObject();
                 fields.put("_id", false); // do not output _id
@@ -174,6 +194,8 @@ public class QueryMongo {
                     }
                 }
             }
+        } catch (ParseException e) {
+            e.printStackTrace();
         } finally {
             if (campCursor != null)
                 campCursor.close();
@@ -190,23 +212,29 @@ public class QueryMongo {
     }
 
     public static void main(String[] args) throws UnknownHostException {
-        if (args.length != 4) {
+        if (args.length < 4) {
             System.err.println("Required number of args 3 instead got " + args.length);
             System.err.println("  Options: [servers] [collectionFormat] [premiseNum] [hourly|daily]");
             System.exit(1);
         }
-        System.out.println("Args: " + Arrays.toString(args));
+        // System.out.println("Args: " + Arrays.toString(args));
+        String startDate = null;
+        String endDate = null;
         String servers = args[0];
         String collectionFormat = args[1];
         String premiseNum = args[2];
         String duration = args[3];
+        if (args.length  > 4) {
+            startDate = args[4];
+            endDate = args[5];
+        }
         setup(servers, collectionFormat);
 
-        long t1 = System.nanoTime();
-        System.out.println(query(collectionFormat, premiseNum, duration));
-        long t2 = System.nanoTime();
-        System.out.println("Total mongo query time: " + queryTime + " milliseconds");
+        // long t1 = System.nanoTime();
+        System.out.println(query(collectionFormat, premiseNum, startDate, endDate, duration));
+        // long t2 = System.nanoTime();
+        // System.out.println("Total mongo query time: " + queryTime + " milliseconds");
 
-        System.out.println("Execution time: " + ((t2 - t1) * 1e-6) + " milliseconds");
+        // System.out.println("Execution time: " + ((t2 - t1) * 1e-6) + " milliseconds");
     }
 }
