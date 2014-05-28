@@ -37,8 +37,8 @@ import java.util.Date;
 public class MongoBulkLoadDriver  extends Configured implements Tool {
   // private static final String MONGO_SERVER = "localhost:27017";
   private static final String MONGO_DB = "bulk";
-  private static final String MONGO_COLLECTION_REGISTER = "register_read";
-  private static final String MONGO_COLLECTION_INTERVAL = "interval_read";
+  private static final String MONGO_COLLECTION_REGISTER = "register_reads";
+  private static final String MONGO_COLLECTION_INTERVAL = "interval_reads";
   private static final String AMI_DVC_FIELD_NAME = "mid";
   private static final String DAY_FIELD_NAME = "rd";
   private static final String INTERVAL_READ_FIELD_PREFIX = "ir";
