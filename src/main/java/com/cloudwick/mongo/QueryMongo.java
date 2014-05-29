@@ -63,24 +63,33 @@ public class QueryMongo {
     }
 
     public static DBCursor queryMongo(DBCollection collection, BasicDBObject query, BasicDBObject fields) {
-        // long t1 = System.nanoTime();
+        long t1 = System.nanoTime();
         DBCursor cursor = collection.find(query, fields);
-        // long t2 = System.nanoTime();
-        // double timeTook = ((t2 - t1) * 1e-6);
-        // System.out.println("Executing query (" + query + ") took: " + timeTook + " milliseconds");
-        // queryTime += timeTook;
+        long t2 = System.nanoTime();
+        double timeTook = ((t2 - t1) * 1e-6);
+        System.out.println("Executing query (" + query + ") took: " + timeTook + " milliseconds");
+        //queryTime += timeTook;
 
         return cursor;
     }
 
-    public static List<String> query(String collectionFormat, String mid, String userStart, String userEnd, String duration) {
+    public static boolean isWithinRange(Date startDate, Date endDate, Date testDate) {
+        return testDate.after(startDate) && testDate.before(endDate);
+    }
+
+    public static List<String> query(
+          String collectionFormat,
+          String mid,
+          String userStart,
+          String userEnd,
+          String duration) {
+
         BasicDBObject campQuery = new BasicDBObject(premiseFieldName, mid);
         BasicDBObject campFields = new BasicDBObject("_id", false)
               .append(amiFieldName, true)
               .append(campStartDateFieldName, true)
               .append(campEndDateFieldName, true);
         DBCursor campCursor = null;
-        //String json = "";
         StringBuilder jsonOutput = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -96,33 +105,53 @@ public class QueryMongo {
                 amiDvcInfo.add(obj);
             }
 
-            // System.out.println("Executing '" + amiDvcInfo.size() + "' queries against '" + collection.getFullName() + "' collection");
+            /*
+              for each result from camp_meter dataset, query against register or interval read data sets
+             */
             for (DBObject amiDevice : amiDvcInfo) {
                 String meterId = (String) amiDevice.get(amiFieldName);
-                String startDate = (String) amiDevice.get(campStartDateFieldName);
-                String endDate = (String) amiDevice.get(campEndDateFieldName);
+                String premiseStart = (String) amiDevice.get(campStartDateFieldName);
+                String premiseEnd = (String) amiDevice.get(campEndDateFieldName);
+                Date premiseStartDate = daily.parse(premiseStart);
+                Date premiseEndDate = daily.parse(premiseEnd);
+                Date userStartDate;
+                Date userEndDate;
                 String valuesFieldName;
+                boolean execute = true;
 
-                String finalStartDate = null;
-                String finalEndDate = null;
+                Date finalStartDate;
+                Date finalEndDate;
 
-                if (userStart != null) {
-                    if (daily.parse(userStart).before(daily.parse(startDate)))
-                        finalStartDate = startDate;
-                    else
-                        finalStartDate = userStart;
+                /*
+                  Date range check for user input data against premise data
+                 */
+                if (userStart != null && userEnd != null) {
+                    userStartDate = daily.parse(userStart);
+                    userEndDate = daily.parse(userEnd);
+                    /*
+                      check if the user entered date range falls in premise date range if not don't execute the query
+                     */
+                    if (!isWithinRange(premiseStartDate, premiseEndDate, userStartDate) &&
+                          !isWithinRange(premiseStartDate, premiseEndDate, userEndDate)) {
+                        execute = false;
+                        finalStartDate = premiseStartDate;
+                        finalEndDate = premiseEndDate;
+                    } else {
+                        if (isWithinRange(premiseStartDate, premiseEndDate, userStartDate))
+                            finalStartDate = userStartDate;
+                        else
+                            finalStartDate = premiseStartDate;
+
+                        if (isWithinRange(premiseStartDate, premiseEndDate, userEndDate))
+                            finalEndDate = userEndDate;
+                        else
+                            finalEndDate = premiseEndDate;
+                    }
                 } else {
-                    finalStartDate = startDate;
+                    finalStartDate = premiseStartDate;
+                    finalEndDate = premiseEndDate;
                 }
 
-                if (userEnd != null) {
-                    if (daily.parse(userEnd).after(daily.parse(endDate)))
-                        finalEndDate = endDate;
-                    else
-                        finalEndDate = userEnd;
-                } else {
-                    finalEndDate = endDate;
-                }
 
                 if (collectionFormat.equalsIgnoreCase("REGISTER"))
                     valuesFieldName = registerFieldName;
@@ -133,65 +162,77 @@ public class QueryMongo {
 
                 BasicDBObject query = new BasicDBObject();
                 query.put(meterIdFieldName, meterId);
-                query.put(dateRecordedFieldName, new BasicDBObject("$gte", finalStartDate).append("$lte", finalEndDate));
+                query.put(
+                      dateRecordedFieldName,
+                      new BasicDBObject("$gte", daily.format(finalStartDate)).append("$lte", daily.format(finalEndDate))
+                );
                 // fields to output
                 BasicDBObject fields = new BasicDBObject();
                 fields.put("_id", false); // do not output _id
                 DBCursor cursor = null;
-                try {
-                    cursor = queryMongo(collection, query, fields);
-                    boolean firstDoc = true;
-                    while (cursor.hasNext()) {
-                        DBObject o = cursor.next();
-                        BasicDBList values = (BasicDBList) o.get(valuesFieldName);
-                        if (duration.equalsIgnoreCase("DAILY")) {
-                            Double dailyResult = 0.0;
-                            for (Object value : values) {
-                                String[] splits = value.toString().split("#");
-                                dailyResult += Double.parseDouble(splits[1]);
-                            }
-                            if (!firstDoc)
-                                jsonOutput.append(",");
-                            if (firstDoc)
-                                firstDoc = false;
-                            jsonOutput.append("{ \"x\" : ");
-                            Date d = daily.parse((String) o.get("rd"));
-                            jsonOutput.append(d.getTime());
-                            jsonOutput.append(", \"y\" : ");
-                            jsonOutput.append(String.format("%.16f", dailyResult));
-                            calendar.setTime(d);
-                            if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-                                jsonOutput.append(", \"color\" : ");
-                                jsonOutput.append("\"#476BB2\"");
-                            }
-                            jsonOutput.append(" }");
-                        } else {
-                            for (Object value : values) {
-                                String[] splits = value.toString().split("#");
+                /*
+                   Execute against register or interval data sets
+                 */
+                if (execute) {
+                    try {
+                        cursor = queryMongo(collection, query, fields);
+                        boolean firstDoc = true;
+                        while (cursor.hasNext()) {
+                            DBObject o = cursor.next();
+                            BasicDBList values = (BasicDBList) o.get(valuesFieldName);
+                            if (duration.equalsIgnoreCase("DAILY")) {
+                                Double dailyResult = 0.0;
+                                for (Object value : values) {
+                                    String[] splits = value.toString().split("#");
+                                    dailyResult += Double.parseDouble(splits[1]);
+                                }
                                 if (!firstDoc)
                                     jsonOutput.append(",");
                                 if (firstDoc)
                                     firstDoc = false;
                                 jsonOutput.append("{ \"x\" : ");
-                                Date d = df.parse(o.get("rd") + " " + splits[0]);
+                                Date d = daily.parse((String) o.get("rd"));
                                 jsonOutput.append(d.getTime());
                                 jsonOutput.append(", \"y\" : ");
-                                jsonOutput.append(splits[1]);
+                                jsonOutput.append(String.format("%.16f", dailyResult));
                                 calendar.setTime(d);
-                                if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                                if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY
+                                      || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
                                     jsonOutput.append(", \"color\" : ");
                                     jsonOutput.append("\"#476BB2\"");
                                 }
                                 jsonOutput.append(" }");
+                            } else {
+                                for (Object value : values) {
+                                    String[] splits = value.toString().split("#");
+                                    if (!firstDoc)
+                                        jsonOutput.append(",");
+                                    if (firstDoc)
+                                        firstDoc = false;
+                                    jsonOutput.append("{ \"x\" : ");
+                                    Date d = df.parse(o.get("rd") + " " + splits[0]);
+                                    jsonOutput.append(d.getTime());
+                                    jsonOutput.append(", \"y\" : ");
+                                    jsonOutput.append(splits[1]);
+                                    calendar.setTime(d);
+                                    if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY
+                                          || calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                                        jsonOutput.append(", \"color\" : ");
+                                        jsonOutput.append("\"#476BB2\"");
+                                    }
+                                    jsonOutput.append(" }");
+                                }
                             }
                         }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (cursor != null) {
+                            cursor.close();
+                        }
                     }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (cursor != null) {
-                        cursor.close();
-                    }
+                } else {
+                    System.out.println("Skipping query : (" + query.toString() + ")");
                 }
             }
         } catch (ParseException e) {
@@ -202,13 +243,6 @@ public class QueryMongo {
         }
 
         return new ArrayList<String>(Arrays.asList(jsonOutput.toString()));
-    }
-
-    public static void findTenDocs() {
-        DBCursor cursor = collection.find().limit(10);
-        while (cursor.hasNext()) {
-            System.out.println(cursor.next());
-        }
     }
 
     public static void main(String[] args) throws UnknownHostException {
